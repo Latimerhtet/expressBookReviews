@@ -47,7 +47,40 @@ regd_users.post("/login", (req, res) => {
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
   //Write your code here
-  return res.status(300).json({ message: "Yet to be implemented" });
+  const review = req.query.review;
+  const isbn = req.params.isbn;
+  const { username, accessToken } = req.session.authorization;
+
+  const desiredbook = books[isbn];
+  if (desiredbook.reviews.length > 0) {
+    for (const eachReview of desiredbook.reviews) {
+      if (eachReview.username === username) {
+        eachReview.review = review;
+      }
+    }
+    return res.status(200).json({ message: "Review Updated!" });
+  } else {
+    const reviewToAdd = { username, review };
+    desiredbook.reviews.push(reviewToAdd);
+    return res.status(200).json({ message: "Review added!" });
+  }
+});
+
+// delete a book review
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+  const isbn = req.params.isbn;
+  const { username } = req.session.authorization;
+
+  const desiredbook = books[isbn];
+  if (!desiredbook) {
+    return res.status(404).json("Book is not in the library!");
+  }
+
+  desiredbook.reviews = desiredbook.reviews.filter(
+    (review) => review.username === username
+  );
+
+  return res.status(200).json("Review is removed!");
 });
 
 module.exports.authenticated = regd_users;
